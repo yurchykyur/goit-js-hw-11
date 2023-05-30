@@ -9,6 +9,45 @@
   </head>
   <body>
     <!-- ❗️❗️❗️ Add partials like so for every page -->
-    <include src="./partials/example.html"></include>
+    <!-- <include src="./partials/example.html"></include> -->
+        <!-- <include src="./partials/find-image.html"></include> -->
+<div>
+<form class="search-form" id="search-form">
+  <input
+    type="text"
+    name="searchQuery"
+    autocomplete="off"
+    placeholder="Search images..."
+  />
+  <button type="submit">Search</button>
+</form>
+</div>
+<div class="gallery">
+  <!-- Картки зображень -->
+  <div class="photo-card">
+  <img src="https://bipbap.ru/wp-content/uploads/2017/04/elitefon.ru_17023.jpg" alt="" loading="lazy" width="300" />
+  <div class="info">
+    <p class="info-item">
+      <b>Likes</b>
+    </p>
+    <p class="info-item">
+      <b>Views</b>
+    </p>
+    <p class="info-item">
+      <b>Comments</b>
+    </p>
+    <p class="info-item">
+      <b>Downloads</b>
+    </p>
+  </div>
+</div>
+  
+</div>
+
+<button type="button" class="load-more">Load more</button>
+
+
+
+
   </body>
 </html>
