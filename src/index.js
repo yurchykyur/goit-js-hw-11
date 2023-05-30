@@ -1,1 +1,3 @@
-import './js/find-image'
+import './js/find-image';
+
+
