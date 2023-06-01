@@ -1,3 +1,1 @@
 import './js/find-image';
-
-
