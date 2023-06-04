@@ -7,7 +7,12 @@
 
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-import { getImages } from './find-image-api';
+import { ApiPixabay } from './find-image-api';
+
+import LoadMoreBtn from './load-more-btn';
+
+const getImagesPixabay = new ApiPixabay();
+const loadMoreBtn = new LoadMoreBtn('.load-more');
 
 const refs = {
   searchForm: document.querySelector('.search-form'),
@@ -23,16 +28,76 @@ refs.loadMoreBtn.addEventListener('click', onLoadMore);
 
 function onSearch(e) {
   e.preventDefault();
-  const search = e.currentTarget.elements.searchQuery.value;
-  if (!search) {
+
+  if (getImagesPixabay.query !== e.currentTarget.elements.searchQuery.value) {
+    getImagesPixabay.query = e.currentTarget.elements.searchQuery.value;
+    loadMoreBtn.hide();
+  } else if (!getImagesPixabay.query) {
     onEmptySearchQuery();
     return;
+  } else {
+    return;
   }
-  getImages(search).then(insertMarkupImages);
+
+  getImagesPixabay.resetPage();
+  refs.gallery.innerHTML = '';
+
+  getImagesPixabay
+    .getImages()
+    .then(reviseEmptyData)
+    .then(alertFoundTotalHits)
+    .then(insertMarkupImages)
+    .catch(error => {
+      console.log(error);
+      badRequest(error);
+      console.error(error);
+    });
 }
 
 function onLoadMore(e) {
-  //   getImages(search).then(insertMarkupImages);
+  getImagesPixabay.increasePage();
+  getImagesPixabay
+    .getImages()
+    .then(reviseEmptyData)
+    .then(insertMarkupImages)
+    .catch(error => {
+      console.log(error);
+      badRequest(error);
+      console.error(error);
+    });
+}
+
+function reviseEmptyData(response) {
+  if (!response.data.hits.length && Array.isArray(response.data.hits)) {
+    onEmptyArrayOfData();
+    throw new Error(
+      console.log(
+        'Sorry, there are no images matching your search query. Please try again.'
+      )
+    );
+  }
+  return response;
+}
+
+function onEmptyArrayOfData() {
+  Notify.failure(
+    'Sorry, there are no images matching your search query. Please try again.',
+    {
+      width: '350px',
+      position: 'center-top',
+      fontSize: '16px',
+    }
+  );
+}
+
+function alertFoundTotalHits(response) {
+  const totalHits = response.data.totalHits;
+  Notify.success(`Hooray! We found ${totalHits} images.`, {
+    width: '350px',
+    position: 'center-top',
+    fontSize: '16px',
+  });
+  return response;
 }
 
 function onEmptySearchQuery() {
@@ -43,11 +108,22 @@ function onEmptySearchQuery() {
   });
 }
 
+function badRequest(error) {
+  if (error.request) {
+    Notify.failure('Bad request to external server, try again.', {
+      width: '300px',
+      position: 'center-top',
+      fontSize: '16px',
+    });
+  }
+}
+
 function insertMarkupImages(data) {
   const arr = createArrayDataForMarkup(data);
 
   const str = createMarkupImages(arr);
   refs.gallery.insertAdjacentHTML('beforeend', str);
+  loadMoreBtn.show();
 }
 
 function createArrayDataForMarkup(obj) {
