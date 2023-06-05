@@ -60,10 +60,8 @@
   &:hover,
   &:focus {
     box-shadow: 0px 1px 6px rgba(46, 47, 66, 0.08),
-      0px 1px 1px rgba(46, 47, 66, 0.16),
-      0px 2px 1px rgba(46, 47, 66, 0.08);
+      0px 1px 1px rgba(46, 47, 66, 0.16), 0px 2px 1px rgba(46, 47, 66, 0.08);
   }
-
 }
 
 .info {
@@ -85,7 +83,6 @@
   bottom: -20px;
   left: 50%;
   transform: translateX(-50%);
-
 }
 
 .load-more {
@@ -101,6 +98,8 @@
   text-align: center;
 
   border-radius: 4px;
+
+  cursor: pointer;
 }
 
 .is-hidden {

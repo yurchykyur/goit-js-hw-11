@@ -7,6 +7,8 @@ export class ApiPixabay {
   constructor() {
     this.page = 1;
     this.searchQuery = '';
+    this.totalHits;
+    this.hitsPerPage;
   }
 
   async getImages() {
@@ -18,6 +20,7 @@ export class ApiPixabay {
       safesearch: true,
       per_page: 40,
     };
+    this.hitsPerPage = options.per_page;
     const URL = `${mainUrlApi}?key=${API_KEY}&q=${this.searchQuery}&image_type=${options.image_type}&orientation=${options.orientation}&safesearch=${options.safesearch}&page=${this.page}&per_page=${options.per_page}`;
 
     const response = await axios.get(URL);

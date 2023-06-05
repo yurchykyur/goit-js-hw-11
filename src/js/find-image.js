@@ -28,13 +28,14 @@ refs.loadMoreBtn.addEventListener('click', onLoadMore);
 
 function onSearch(e) {
   e.preventDefault();
+  if (!e.currentTarget.elements.searchQuery.value) {
+    onEmptySearchQuery();
+    return;
+  }
 
   if (getImagesPixabay.query !== e.currentTarget.elements.searchQuery.value) {
     getImagesPixabay.query = e.currentTarget.elements.searchQuery.value;
     loadMoreBtn.hide();
-  } else if (!getImagesPixabay.query) {
-    onEmptySearchQuery();
-    return;
   } else {
     return;
   }
@@ -46,7 +47,12 @@ function onSearch(e) {
     .getImages()
     .then(reviseEmptyData)
     .then(alertFoundTotalHits)
-    .then(insertMarkupImages)
+    .then(resp => {
+      loadMoreBtn.show();
+      reviseTheEndTotalHits();
+      insertMarkupImages(resp);
+      smoothScroll();
+    })
     .catch(error => {
       console.log(error);
       badRequest(error);
@@ -59,12 +65,33 @@ function onLoadMore(e) {
   getImagesPixabay
     .getImages()
     .then(reviseEmptyData)
-    .then(insertMarkupImages)
+    .then(resp => {
+      reviseTheEndTotalHits();
+      insertMarkupImages(resp);
+      smoothScrollLoadMore();
+    })
     .catch(error => {
       console.log(error);
       badRequest(error);
       console.error(error);
     });
+}
+// reviseTheEndTotalHits
+function reviseTheEndTotalHits() {
+  console.log(getImagesPixabay.page);
+  console.log(getImagesPixabay.hitsPerPage);
+  console.log(getImagesPixabay.totalHits);
+  const hitsOnShow = getImagesPixabay.page * getImagesPixabay.hitsPerPage;
+  if (getImagesPixabay.totalHits <= hitsOnShow) {
+    Notify.info("We're sorry, but you've reached the end of search results.", {
+      width: '350px',
+      position: 'center-top',
+      fontSize: '16px',
+    });
+    console.log(loadMoreBtn.refs.button);
+    loadMoreBtn.refs.button.classList.add('is-hidden');
+    loadMoreBtn.hide();
+  }
 }
 
 function reviseEmptyData(response) {
@@ -92,6 +119,7 @@ function onEmptyArrayOfData() {
 
 function alertFoundTotalHits(response) {
   const totalHits = response.data.totalHits;
+  getImagesPixabay.totalHits = totalHits;
   Notify.success(`Hooray! We found ${totalHits} images.`, {
     width: '350px',
     position: 'center-top',
@@ -123,7 +151,6 @@ function insertMarkupImages(data) {
 
   const str = createMarkupImages(arr);
   refs.gallery.insertAdjacentHTML('beforeend', str);
-  loadMoreBtn.show();
 }
 
 function createArrayDataForMarkup(obj) {
@@ -187,4 +214,26 @@ function createMarkupImages(arr) {
       }
     )
     .join('');
+}
+
+function smoothScroll() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 0.7,
+    behavior: 'smooth',
+  });
+}
+
+function smoothScrollLoadMore() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
 }
