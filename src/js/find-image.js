@@ -1,27 +1,20 @@
-// import SimpleLightbox from 'simplelightbox';
-// import 'simplelightbox/dist/simple-lightbox.min.css';
-
-// const lightbox = new SimpleLightbox('.gallery a', {
-//   /* options */
-// });
-
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-
 import { ApiPixabay } from './find-image-api';
-
 import LoadMoreBtn from './load-more-btn';
+
+const lightboxObj = {};
 
 const getImagesPixabay = new ApiPixabay();
 const loadMoreBtn = new LoadMoreBtn('.load-more');
 
 const refs = {
   searchForm: document.querySelector('.search-form'),
-  submitBtn: document.querySelector('.search-form__btn'),
+  // submitBtn: document.querySelector('.search-form__btn'),
   loadMoreBtn: document.querySelector('.load-more'),
   gallery: document.querySelector('.gallery'),
 };
-
-// console.log();
 
 refs.searchForm.addEventListener('submit', onSearch);
 refs.loadMoreBtn.addEventListener('click', onLoadMore);
@@ -51,7 +44,9 @@ function onSearch(e) {
       loadMoreBtn.show();
       reviseTheEndTotalHits();
       insertMarkupImages(resp);
-      smoothScroll();
+      smoothScrollForImages(0.25);
+      const lightbox = new SimpleLightbox('.gallery a', {});
+      lightboxObj.init = lightbox;
     })
     .catch(error => {
       console.log(error);
@@ -68,7 +63,8 @@ function onLoadMore(e) {
     .then(resp => {
       reviseTheEndTotalHits();
       insertMarkupImages(resp);
-      smoothScrollLoadMore();
+      smoothScrollForImages(1.35);
+      lightboxObj.init.refresh();
     })
     .catch(error => {
       console.log(error);
@@ -76,11 +72,8 @@ function onLoadMore(e) {
       console.error(error);
     });
 }
-// reviseTheEndTotalHits
+
 function reviseTheEndTotalHits() {
-  console.log(getImagesPixabay.page);
-  console.log(getImagesPixabay.hitsPerPage);
-  console.log(getImagesPixabay.totalHits);
   const hitsOnShow = getImagesPixabay.page * getImagesPixabay.hitsPerPage;
   if (getImagesPixabay.totalHits <= hitsOnShow) {
     Notify.info("We're sorry, but you've reached the end of search results.", {
@@ -190,50 +183,46 @@ function createMarkupImages(arr) {
         downloads,
       }) => {
         return `<div class="photo-card">
+        <a
+          class="gallery__large-image"
+          href="${largeImageURL}"
+        >
+        <div class="photo-card__image-wrapper">
           <img
             src="${webformatURL}"
             alt="${tags}"
             loading="lazy"
-            width="300"
+           
           />
+          </div>
           <div class="info">
             <p class="info-item">
-              <b>Likes</b>
+              <b>Likes</b><span class="info-item__counter">${likes}</span>
             </p>
             <p class="info-item">
-              <b>Views</b>
+              <b>Views</b><span class="info-item__counter">${views}</span>
             </p>
             <p class="info-item">
-              <b>Comments</b>
+              <b>Comments</b><span class="info-item__counter">${comments}</span>
             </p>
             <p class="info-item">
-              <b>Downloads</b>
+              <b>Downloads</b><span class="info-item__counter">${downloads}</span>
             </p>
           </div>
+          </a>
         </div>`;
       }
     )
     .join('');
 }
 
-function smoothScroll() {
+function smoothScrollForImages(multiplier) {
   const { height: cardHeight } = document
     .querySelector('.gallery')
     .firstElementChild.getBoundingClientRect();
 
   window.scrollBy({
-    top: cardHeight * 0.7,
-    behavior: 'smooth',
-  });
-}
-
-function smoothScrollLoadMore() {
-  const { height: cardHeight } = document
-    .querySelector('.gallery')
-    .firstElementChild.getBoundingClientRect();
-
-  window.scrollBy({
-    top: cardHeight * 2,
+    top: cardHeight * multiplier,
     behavior: 'smooth',
   });
 }
