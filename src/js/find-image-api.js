@@ -1,6 +1,4 @@
-// https://pixabay.com/
-
-const axios = require('axios').default;
+import axios from 'axios'
 
 export class ApiPixabay {
   constructor() {
