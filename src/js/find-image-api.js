@@ -23,7 +23,6 @@ export class ApiPixabay {
     const URL = `${mainUrlApi}?key=${API_KEY}&q=${this.searchQuery}&image_type=${options.image_type}&orientation=${options.orientation}&safesearch=${options.safesearch}&page=${this.page}&per_page=${options.per_page}`;
 
     const response = await axios.get(URL);
-    console.log(response);
     return response;
   }
 

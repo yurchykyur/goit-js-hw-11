@@ -1,17 +1,26 @@
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import { ApiPixabay } from './find-image-api';
 import LoadMoreBtn from './load-more-btn';
+import {
+  writeNewSearchQuery,
+  onEmptyArrayOfData,
+  onEmptySearchQuery,
+  alertMessageFoundTotalHits,
+  badRequestMessage,
+  theEndTotalhitsMessage,
+} from './notiflix-message';
+import smoothScrollForImages from './smooth-scroll';
+import Spinner from './spinner';
 
-const lightboxObj = {};
+let lightbox;
 
 const getImagesPixabay = new ApiPixabay();
 const loadMoreBtn = new LoadMoreBtn('.load-more');
+const spinner = new Spinner('.loader');
 
 const refs = {
   searchForm: document.querySelector('.search-form'),
-  // submitBtn: document.querySelector('.search-form__btn'),
   loadMoreBtn: document.querySelector('.load-more'),
   gallery: document.querySelector('.gallery'),
 };
@@ -19,6 +28,13 @@ const refs = {
 refs.searchForm.addEventListener('submit', onSearch);
 refs.loadMoreBtn.addEventListener('click', onLoadMore);
 
+/**
+ *a function that, after clicking on the send search query button, 
+ performs search query checks, transmits the search query, 
+ creates markup and displays it in html
+ * @param {Event} e click on button
+ * @returns nothing return, used for stop function
+ */
 function onSearch(e) {
   e.preventDefault();
   if (!e.currentTarget.elements.searchQuery.value) {
@@ -26,10 +42,14 @@ function onSearch(e) {
     return;
   }
 
-  if (getImagesPixabay.query !== e.currentTarget.elements.searchQuery.value) {
-    getImagesPixabay.query = e.currentTarget.elements.searchQuery.value;
+  const searchQuery = e.currentTarget.elements.searchQuery.value;
+
+  if (getImagesPixabay.query !== searchQuery) {
+    getImagesPixabay.query = searchQuery;
     loadMoreBtn.hide();
   } else {
+    writeNewSearchQuery();
+
     return;
   }
 
@@ -45,8 +65,7 @@ function onSearch(e) {
       reviseTheEndTotalHits();
       insertMarkupImages(resp);
       smoothScrollForImages(0.25);
-      const lightbox = new SimpleLightbox('.gallery a', {});
-      lightboxObj.init = lightbox;
+      lightbox = new SimpleLightbox('.gallery a', {});
     })
     .catch(error => {
       console.log(error);
@@ -55,6 +74,12 @@ function onSearch(e) {
     });
 }
 
+/**
+ * a function that, after clicking on the Load more button,
+ * sends a search query, performs search query checks, transmits the search query,
+ * creates a markup and displays it in html
+ * @param {Event} e click on button
+ */
 function onLoadMore(e) {
   getImagesPixabay.increasePage();
   getImagesPixabay
@@ -64,7 +89,7 @@ function onLoadMore(e) {
       reviseTheEndTotalHits();
       insertMarkupImages(resp);
       smoothScrollForImages(1.35);
-      lightboxObj.init.refresh();
+      lightbox.refresh();
     })
     .catch(error => {
       console.log(error);
@@ -73,20 +98,24 @@ function onLoadMore(e) {
     });
 }
 
+/**
+ * a function that checks whether all search elements have already been displayed
+ */
 function reviseTheEndTotalHits() {
   const hitsOnShow = getImagesPixabay.page * getImagesPixabay.hitsPerPage;
   if (getImagesPixabay.totalHits <= hitsOnShow) {
-    Notify.info("We're sorry, but you've reached the end of search results.", {
-      width: '350px',
-      position: 'center-top',
-      fontSize: '16px',
-    });
-    console.log(loadMoreBtn.refs.button);
+    theEndTotalhitsMessage();
+
     loadMoreBtn.refs.button.classList.add('is-hidden');
     loadMoreBtn.hide();
   }
 }
 
+/**
+ * function that checks if we have received data for our search query
+ * @param {Promise} response
+ * @returns promise
+ */
 function reviseEmptyData(response) {
   if (!response.data.hits.length && Array.isArray(response.data.hits)) {
     onEmptyArrayOfData();
@@ -99,79 +128,46 @@ function reviseEmptyData(response) {
   return response;
 }
 
-function onEmptyArrayOfData() {
-  Notify.failure(
-    'Sorry, there are no images matching your search query. Please try again.',
-    {
-      width: '350px',
-      position: 'center-top',
-      fontSize: '16px',
-    }
-  );
-}
-
+/**
+ * a function that checks how many items we have found for the user's search query and notifies him
+ * @param {Promise} response
+ * @returns promise
+ */
 function alertFoundTotalHits(response) {
   const totalHits = response.data.totalHits;
   getImagesPixabay.totalHits = totalHits;
-  Notify.success(`Hooray! We found ${totalHits} images.`, {
-    width: '350px',
-    position: 'center-top',
-    fontSize: '16px',
-  });
+  alertMessageFoundTotalHits(totalHits);
+
   return response;
 }
 
-function onEmptySearchQuery() {
-  Notify.failure('Please, enter a search query.', {
-    width: '300px',
-    position: 'center-top',
-    fontSize: '16px',
-  });
-}
-
+/**
+ * a function that checks whether a request to a remote server has failed or not
+ * and notifies the user about it
+ * @param {Error} error
+ */
 function badRequest(error) {
   if (error.request) {
-    Notify.failure('Bad request to external server, try again.', {
-      width: '300px',
-      position: 'center-top',
-      fontSize: '16px',
-    });
+    badRequestMessage();
   }
 }
 
+/**
+ * a function that adds html markup to get a string. The function includes additional
+ * functions for processing data and converting them into a string.
+ * @param {Object} data
+ */
 function insertMarkupImages(data) {
-  const arr = createArrayDataForMarkup(data);
-
-  const str = createMarkupImages(arr);
-  refs.gallery.insertAdjacentHTML('beforeend', str);
+  refs.gallery.insertAdjacentHTML('beforeend', createMarkupImages(data));
 }
 
-function createArrayDataForMarkup(obj) {
-  return obj.data.hits.map(
-    ({
-      webformatURL,
-      largeImageURL,
-      tags,
-      likes,
-      views,
-      comments,
-      downloads,
-    }) => {
-      return {
-        webformatURL,
-        largeImageURL,
-        tags,
-        likes,
-        views,
-        comments,
-        downloads,
-      };
-    }
-  );
-}
-
-function createMarkupImages(arr) {
-  return arr
+/**
+ * a function that converts an object into a string for markup
+ * @param {Object} arr
+ * @returns string of markup
+ */
+function createMarkupImages(obj) {
+  return obj.data.hits
     .map(
       ({
         webformatURL,
@@ -214,15 +210,4 @@ function createMarkupImages(arr) {
       }
     )
     .join('');
-}
-
-function smoothScrollForImages(multiplier) {
-  const { height: cardHeight } = document
-    .querySelector('.gallery')
-    .firstElementChild.getBoundingClientRect();
-
-  window.scrollBy({
-    top: cardHeight * multiplier,
-    behavior: 'smooth',
-  });
 }
