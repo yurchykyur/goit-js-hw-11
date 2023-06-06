@@ -8,6 +8,7 @@ export default class LoadMoreBtn {
     refs.button = document.querySelector('.load-more');
     return refs;
   }
+
   show() {
     this.refs.button.classList.remove('is-hidden');
   }
