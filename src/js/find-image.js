@@ -105,10 +105,13 @@ function onLoadMore(e) {
 function reviseTheEndTotalHits() {
   const hitsOnShow = getImagesPixabay.page * getImagesPixabay.hitsPerPage;
   if (getImagesPixabay.totalHits <= hitsOnShow) {
-    notiflixNotify.theEndTotalhitsMessage();
-
+    
     loadMoreBtn.refs.button.classList.add('is-hidden');
     loadMoreBtn.hide();
+    
+    if (getImagesPixabay.totalHits > getImagesPixabay.hitsPerPage){
+       notiflixNotify.theEndTotalhitsMessage();
+    }
   }
 }
 

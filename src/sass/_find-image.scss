@@ -53,6 +53,13 @@ img {
 
 .search-form__btn-icon {
   fill: cadetblue;
+
+  transition: fill 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  .search-form__btn:hover &,
+  .search-form__btn:focus & {
+    fill: rgb(69, 218, 69);
+  }
 }
 
 .gallery {
@@ -135,6 +142,18 @@ img {
   border-radius: 4px;
 
   cursor: pointer;
+
+  transition: box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    font-weight 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover,
+  &:focus {
+    box-shadow: 0px 1px 6px rgba(46, 47, 66, 0.08),
+      0px 1px 1px rgba(46, 47, 66, 0.16), 0px 2px 1px rgba(46, 47, 66, 0.08);
+    color: blueviolet;
+    font-weight:600;    
+  }
 }
 
 .is-hidden {
