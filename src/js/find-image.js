@@ -2,14 +2,7 @@ import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import { ApiPixabay } from './find-image-api';
 import LoadMoreBtn from './load-more-btn';
-import {
-  writeNewSearchQuery,
-  onEmptyArrayOfData,
-  onEmptySearchQuery,
-  alertMessageFoundTotalHits,
-  badRequestMessage,
-  theEndTotalhitsMessage,
-} from './notiflix-message';
+import { NotiflixNotify } from './notiflix-message';
 import smoothScrollForImages from './smooth-scroll';
 import Spinner from './spinner';
 
@@ -17,6 +10,7 @@ let lightbox;
 
 const getImagesPixabay = new ApiPixabay();
 const loadMoreBtn = new LoadMoreBtn('.load-more');
+const notiflixNotify = new NotiflixNotify();
 const spinner = new Spinner('.loader');
 
 const refs = {
@@ -38,7 +32,7 @@ refs.loadMoreBtn.addEventListener('click', onLoadMore);
 function onSearch(e) {
   e.preventDefault();
   if (!e.currentTarget.elements.searchQuery.value) {
-    onEmptySearchQuery();
+    notiflixNotify.onEmptySearchQuery();
     return;
   }
 
@@ -48,11 +42,11 @@ function onSearch(e) {
     getImagesPixabay.query = searchQuery;
     loadMoreBtn.hide();
   } else {
-    writeNewSearchQuery();
+    notiflixNotify.writeNewSearchQuery();
 
     return;
   }
-
+  spinner.show();
   getImagesPixabay.resetPage();
   refs.gallery.innerHTML = '';
 
@@ -71,6 +65,9 @@ function onSearch(e) {
       console.log(error);
       badRequest(error);
       console.error(error);
+    })
+    .finally(data => {
+      spinner.hide();
     });
 }
 
@@ -81,6 +78,7 @@ function onSearch(e) {
  * @param {Event} e click on button
  */
 function onLoadMore(e) {
+  spinner.show();
   getImagesPixabay.increasePage();
   getImagesPixabay
     .getImages()
@@ -95,6 +93,9 @@ function onLoadMore(e) {
       console.log(error);
       badRequest(error);
       console.error(error);
+    })
+    .finally(data => {
+      spinner.hide();
     });
 }
 
@@ -104,7 +105,7 @@ function onLoadMore(e) {
 function reviseTheEndTotalHits() {
   const hitsOnShow = getImagesPixabay.page * getImagesPixabay.hitsPerPage;
   if (getImagesPixabay.totalHits <= hitsOnShow) {
-    theEndTotalhitsMessage();
+    notiflixNotify.theEndTotalhitsMessage();
 
     loadMoreBtn.refs.button.classList.add('is-hidden');
     loadMoreBtn.hide();
@@ -118,7 +119,7 @@ function reviseTheEndTotalHits() {
  */
 function reviseEmptyData(response) {
   if (!response.data.hits.length && Array.isArray(response.data.hits)) {
-    onEmptyArrayOfData();
+    notiflixNotify.onEmptyArrayOfData();
     throw new Error(
       console.log(
         'Sorry, there are no images matching your search query. Please try again.'
@@ -136,7 +137,7 @@ function reviseEmptyData(response) {
 function alertFoundTotalHits(response) {
   const totalHits = response.data.totalHits;
   getImagesPixabay.totalHits = totalHits;
-  alertMessageFoundTotalHits(totalHits);
+  notiflixNotify.alertMessageFoundTotalHits(totalHits);
 
   return response;
 }
@@ -148,7 +149,7 @@ function alertFoundTotalHits(response) {
  */
 function badRequest(error) {
   if (error.request) {
-    badRequestMessage();
+    notiflixNotify.badRequestMessage();
   }
 }
 
