@@ -77,7 +77,9 @@ function onSearch(e) {
 }
 
 /**
- *
+ * a function that follows the view position until the end of the picture block,
+ * sends a search query, performs search query checks, transmits the search query,
+ * creates a markup and displays it in html
  */
 function infiniteScroll() {
   const documentRect = refs.gallery.getBoundingClientRect();
