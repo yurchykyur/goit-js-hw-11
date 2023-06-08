@@ -66,7 +66,7 @@ function onSearch(e) {
       badRequest(error);
       console.error(error);
     })
-    .finally(data => {
+    .finally(_ => {
       spinner.hide();
     });
 }
@@ -94,7 +94,7 @@ function onLoadMore(e) {
       badRequest(error);
       console.error(error);
     })
-    .finally(data => {
+    .finally(_ => {
       spinner.hide();
     });
 }
@@ -107,7 +107,6 @@ function reviseTheEndTotalHits() {
   if (getImagesPixabay.totalHits <= hitsOnShow) {
     notiflixNotify.theEndTotalhitsMessage();
 
-    loadMoreBtn.refs.button.classList.add('is-hidden');
     loadMoreBtn.hide();
   }
 }
