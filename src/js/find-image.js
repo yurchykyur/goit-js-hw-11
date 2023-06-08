@@ -84,15 +84,6 @@ function onSearch(e) {
 function infiniteScroll() {
   const documentRect = refs.gallery.getBoundingClientRect();
 
-  console.log('documentRect.top', documentRect.top);
-
-  console.log('documentRect.bottom', documentRect.bottom);
-  console.log(
-    'document.documentElement.clientHeight',
-    document.documentElement.clientHeight
-  );
-  console.log('refs.gallery.clientHeight', refs.gallery.clientHeight);
-
   if (
     documentRect.bottom < document.documentElement.clientHeight + 150 &&
     addControllerForInfiniteScroll
