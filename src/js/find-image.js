@@ -66,7 +66,7 @@ function onSearch(e) {
       badRequest(error);
       console.error(error);
     })
-    .finally(data => {
+    .finally(_ => {
       spinner.hide();
     });
 }
@@ -94,7 +94,7 @@ function onLoadMore(e) {
       badRequest(error);
       console.error(error);
     })
-    .finally(data => {
+    .finally(_ => {
       spinner.hide();
     });
 }
@@ -105,8 +105,9 @@ function onLoadMore(e) {
 function reviseTheEndTotalHits() {
   const hitsOnShow = getImagesPixabay.page * getImagesPixabay.hitsPerPage;
   if (getImagesPixabay.totalHits <= hitsOnShow) {
-    
-    loadMoreBtn.refs.button.classList.add('is-hidden');
+
+    notiflixNotify.theEndTotalhitsMessage();
+
     loadMoreBtn.hide();
     
     if (getImagesPixabay.totalHits > getImagesPixabay.hitsPerPage){
