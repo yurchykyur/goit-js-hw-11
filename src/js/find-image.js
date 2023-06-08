@@ -5,6 +5,7 @@ import LoadMoreBtn from './load-more-btn';
 import { NotiflixNotify } from './notiflix-message';
 import smoothScrollForImages from './smooth-scroll';
 import Spinner from './spinner';
+import throttle from 'lodash.throttle';
 
 let lightbox;
 
@@ -19,8 +20,10 @@ const refs = {
   gallery: document.querySelector('.gallery'),
 };
 
+let addControllerForInfiniteScroll = true;
+
 refs.searchForm.addEventListener('submit', onSearch);
-refs.loadMoreBtn.addEventListener('click', onLoadMore);
+// refs.loadMoreBtn.addEventListener('click', onLoadMore);
 
 /**
  *a function that, after clicking on the send search query button, 
@@ -46,6 +49,7 @@ function onSearch(e) {
 
     return;
   }
+
   spinner.show();
   getImagesPixabay.resetPage();
   refs.gallery.innerHTML = '';
@@ -55,7 +59,7 @@ function onSearch(e) {
     .then(reviseEmptyData)
     .then(alertFoundTotalHits)
     .then(resp => {
-      loadMoreBtn.show();
+      // loadMoreBtn.show();
       reviseTheEndTotalHits();
       insertMarkupImages(resp);
       smoothScrollForImages(0.25);
@@ -68,7 +72,51 @@ function onSearch(e) {
     })
     .finally(_ => {
       spinner.hide();
+      window.addEventListener('scroll', throttle(infiniteScroll, 500));
     });
+}
+
+/**
+ * a function that follows the view position until the end of the picture block,
+ * sends a search query, performs search query checks, transmits the search query,
+ * creates a markup and displays it in html
+ */
+function infiniteScroll() {
+  const documentRect = refs.gallery.getBoundingClientRect();
+
+  console.log('documentRect.top', documentRect.top);
+
+  console.log('documentRect.bottom', documentRect.bottom);
+  console.log(
+    'document.documentElement.clientHeight',
+    document.documentElement.clientHeight
+  );
+  console.log('refs.gallery.clientHeight', refs.gallery.clientHeight);
+
+  if (
+    documentRect.bottom < document.documentElement.clientHeight + 150 &&
+    addControllerForInfiniteScroll
+  ) {
+    addControllerForInfiniteScroll = false;
+    spinner.show();
+    getImagesPixabay.increasePage();
+    getImagesPixabay
+      .getImages()
+      .then(reviseEmptyData)
+      .then(resp => {
+        reviseTheEndTotalHits();
+        insertMarkupImages(resp);
+        lightbox.refresh();
+      })
+      .catch(error => {
+        console.log('infiniteScroll', error);
+        badRequest(error);
+        console.error(error);
+      })
+      .finally(_ => {
+        spinner.hide();
+      });
+  }
 }
 
 /**
@@ -77,41 +125,40 @@ function onSearch(e) {
  * creates a markup and displays it in html
  * @param {Event} e click on button
  */
-function onLoadMore(e) {
-  spinner.show();
-  getImagesPixabay.increasePage();
-  getImagesPixabay
-    .getImages()
-    .then(reviseEmptyData)
-    .then(resp => {
-      reviseTheEndTotalHits();
-      insertMarkupImages(resp);
-      smoothScrollForImages(1.35);
-      lightbox.refresh();
-    })
-    .catch(error => {
-      console.log(error);
-      badRequest(error);
-      console.error(error);
-    })
-    .finally(_ => {
-      spinner.hide();
-    });
-}
+// function onLoadMore(e) {
+//   spinner.show();
+//   getImagesPixabay.increasePage();
+//   getImagesPixabay
+//     .getImages()
+//     .then(reviseEmptyData)
+//     .then(resp => {
+//       reviseTheEndTotalHits();
+//       insertMarkupImages(resp);
+//       smoothScrollForImages(1.35);
+//       lightbox.refresh();
+//     })
+//     .catch(error => {
+//       console.log(error);
+//       badRequest(error);
+//       console.error(error);
+//     })
+//     .finally(_ => {
+//       spinner.hide();
+//     });
+// }
 
 /**
  * a function that checks whether all search elements have already been displayed
  */
 function reviseTheEndTotalHits() {
   const hitsOnShow = getImagesPixabay.page * getImagesPixabay.hitsPerPage;
+  addControllerForInfiniteScroll = true;
   if (getImagesPixabay.totalHits <= hitsOnShow) {
-
-    notiflixNotify.theEndTotalhitsMessage();
-
+    addControllerForInfiniteScroll = false;
     loadMoreBtn.hide();
-    
-    if (getImagesPixabay.totalHits > getImagesPixabay.hitsPerPage){
-       notiflixNotify.theEndTotalhitsMessage();
+
+    if (getImagesPixabay.totalHits > getImagesPixabay.hitsPerPage) {
+      notiflixNotify.theEndTotalhitsMessage();
     }
   }
 }
